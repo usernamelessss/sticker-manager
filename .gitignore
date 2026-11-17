@@ -6,9 +6,7 @@ src-tauri/gen/schemas/
 .DS_Store
 *.log
 
-# 由 skills-manager 生成的本机符号链接，指向 ~/.skills-manager
-.claude/skills/
-.claude/skills-disabled/
-.codex/skills/
-.copilot/skills/
-.pi/skills/
+.claude/
+.codex/
+.copilot/
+.pi/
