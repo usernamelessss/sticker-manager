@@ -16,6 +16,8 @@ macOS 和 Windows 上的表情包管理器，把表情收进一个仓库，分�
 
 </div>
 
+<a href="docs/images/homepage.mp4"><img src="docs/images/homepage.gif" alt="演示动画：聊天里按 ⌃⌥E 呼出表情面板，输入「下班」，单击复制后按 ⌘V 发出；这张表情回到主窗口里它的格子，最后是应用图标和「想发的那张表情，一搜就有」"></a>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/main-window-dark.png">
   <img src="docs/images/main-window.png" alt="表情管理器主窗口：左栏是仓库和分类，中间是表情网格，右侧详情栏显示选中表情的分类、配文和使用记录">
@@ -39,7 +41,7 @@ macOS 和 Windows 上的表情包管理器，把表情收进一个仓库，分�
 </tr>
 </table>
 
-<sub>截图和录屏来自 macOS 版。</sub>
+<sub>截图和录屏来自 macOS 版。顶部的演示动画是照着界面重新做的，不是录屏。</sub>
 
 ## 使用文档
 
