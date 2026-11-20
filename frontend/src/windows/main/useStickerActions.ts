@@ -251,5 +251,5 @@ export function useStickerActions(stickers: Sticker[]) {
     return perform(() => ipc.revealSticker(sticker.id), false);
   }
 
-  return { copy, drag, toggleFavorite, setFavorites,reveal, deleteSticker, deleteStickers, restoreSticker, restoreStickers, purgeSticker, purgeStickers, purgeDeletedStickers, selectedStickers, targetsFor, undo, undoDelete, dismissUndo, busy, claimDragDrop, copiedId, error };
+  return { copy, drag, toggleFavorite, setFavorites, reveal, deleteSticker, deleteStickers, restoreSticker, restoreStickers, purgeSticker, purgeStickers, purgeDeletedStickers, selectedStickers, targetsFor, undo, undoDelete, dismissUndo, busy, claimDragDrop, copiedId, error };
 }

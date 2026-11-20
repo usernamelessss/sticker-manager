@@ -29,7 +29,7 @@ impl Library {
         Ok(self.sticker(id)?.favorite)
     }
 
-        /// 已删除的表情不动；返回实际改动的张数。
+    // 已删除的表情不动；返回实际改动的张数。
     pub fn set_stickers_favorite(&mut self, ids: &[String], favorite: bool) -> Result<usize> {
         let tx = self
             .conn
@@ -192,21 +192,44 @@ mod tests {
         assert_eq!(library.sticker("one").unwrap().usage_count, 0);
     }
 
-        #[test]
+    #[test]
     fn sets_favorite_for_many_and_skips_deleted_and_missing() {
         let dir = tempfile::tempdir().unwrap();
         let mut library = library(dir.path());
         library
             .conn
-            .execute("UPDATE stickers SET deleted_at = 1 WHERE id = 'two'", [])
+            .execute(
+                "INSERT INTO stickers (id, hash, ext, name, width, height, byte_size, added_at, deleted_at)
+                 VALUES ('three', 'hash3', 'png', '删了', 1, 1, 1, 3, 1)",
+                [],
+            )
             .unwrap();
-        let ids = vec!["one".to_string(), "two".to_string(), "missing".to_string()];
-        assert_eq!(library.set_stickers_favorite(&ids, true).unwrap(), 1);
+        let ids = vec![
+            "one".to_string(),
+            "two".to_string(),
+            "three".to_string(),
+            "missing".to_string(),
+        ];
+        assert_eq!(library.set_stickers_favorite(&ids, true).unwrap(), 2);
         assert!(library.sticker("one").unwrap().favorite);
-        assert_eq!(library.overview().unwrap().favorites, 1);
+        assert!(library.sticker("two").unwrap().favorite);
+        assert!(!library.sticker("three").unwrap().favorite);
+        assert_eq!(library.overview().unwrap().favorites, 2);
         // 已经是目标状态的不算改动
         assert_eq!(library.set_stickers_favorite(&ids, true).unwrap(), 0);
-        assert_eq!(library.set_stickers_favorite(&ids, false).unwrap(), 1);
+        // 部分已收藏时只算真正改动的那张
+        assert_eq!(
+            library
+                .set_stickers_favorite(&["one".to_string()], false)
+                .unwrap(),
+            1
+        );
+        assert_eq!(library.set_stickers_favorite(&ids, true).unwrap(), 1);
+        assert_eq!(library.overview().unwrap().favorites, 2);
+        // 批量取消收藏
+        assert_eq!(library.set_stickers_favorite(&ids, false).unwrap(), 2);
+        assert!(!library.sticker("one").unwrap().favorite);
+        assert!(!library.sticker("two").unwrap().favorite);
         assert_eq!(library.overview().unwrap().favorites, 0);
     }
 }
