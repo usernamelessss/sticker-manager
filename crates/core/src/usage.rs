@@ -1,4 +1,4 @@
-use rusqlite::params;
+use rusqlite::{TransactionBehavior, params};
 
 use crate::{Error, Library, Result, time::unix_millis};
 
@@ -27,6 +27,25 @@ impl Library {
             return Err(Error::StickerUnavailable);
         }
         Ok(self.sticker(id)?.favorite)
+    }
+
+        /// 已删除的表情不动；返回实际改动的张数。
+    pub fn set_stickers_favorite(&mut self, ids: &[String], favorite: bool) -> Result<usize> {
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let mut count = 0;
+        {
+            let mut statement = tx.prepare(
+                "UPDATE stickers SET favorite = ?2
+                 WHERE id = ?1 AND deleted_at IS NULL AND favorite <> ?2",
+            )?;
+            for id in ids {
+                count += statement.execute(params![id, favorite])?;
+            }
+        }
+        tx.commit()?;
+        Ok(count)
     }
 }
 
@@ -171,5 +190,23 @@ mod tests {
         assert!(!library.toggle_favorite("one").unwrap());
         assert_eq!(library.overview().unwrap().favorites, 0);
         assert_eq!(library.sticker("one").unwrap().usage_count, 0);
+    }
+
+        #[test]
+    fn sets_favorite_for_many_and_skips_deleted_and_missing() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut library = library(dir.path());
+        library
+            .conn
+            .execute("UPDATE stickers SET deleted_at = 1 WHERE id = 'two'", [])
+            .unwrap();
+        let ids = vec!["one".to_string(), "two".to_string(), "missing".to_string()];
+        assert_eq!(library.set_stickers_favorite(&ids, true).unwrap(), 1);
+        assert!(library.sticker("one").unwrap().favorite);
+        assert_eq!(library.overview().unwrap().favorites, 1);
+        // 已经是目标状态的不算改动
+        assert_eq!(library.set_stickers_favorite(&ids, true).unwrap(), 0);
+        assert_eq!(library.set_stickers_favorite(&ids, false).unwrap(), 1);
+        assert_eq!(library.overview().unwrap().favorites, 0);
     }
 }
